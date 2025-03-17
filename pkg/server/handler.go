@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
-	Registry "github.com/AminCoder/Go-DyFunc/internal/registery"
+	Registry "github.com/AminCoder/Go-DyFunc/pkg/registry"
 )
 
 var i_username, i_password string

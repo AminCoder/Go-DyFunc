@@ -27,7 +27,7 @@
 
 
 ```bash
-git get github.com/AminCoder/Go-DyFunc
+go get github.com/AminCoder/Go-DyFunc
 ```
 
 ## Usage

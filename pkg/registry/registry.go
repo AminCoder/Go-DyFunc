@@ -14,9 +14,10 @@ type Middleware_Function func(Entry_Data) error
 
 // function_registry stores dynamically registered functions.
 type Function_Registry struct {
-	func_map        map[string]reflect.Value
-	middleware_list []Middleware_Function
-	mu              sync.RWMutex
+	func_map               map[string]reflect.Value
+	middleware_list        []Middleware_Function
+	i_username, i_password string
+	mu                     sync.RWMutex
 }
 
 type Entry_Data struct {
@@ -160,4 +161,24 @@ func (r *Function_Registry) Invoke_Middlewares(data []struct {
 		}
 	}
 	return nil
+}
+
+func (r *Function_Registry) Set_Basic_Auth(username string, password string) {
+	r.i_username = username
+	r.i_password = password
+}
+
+func (r *Function_Registry) Check_Authentication(req *http.Request) (bool, error) {
+	if r.i_username == "" || r.i_password == "" {
+		return true, nil
+	}
+	if username, password, ok := req.BasicAuth(); ok == true {
+		if username == r.i_username && password == r.i_password {
+			return true, nil
+		} else {
+			return false, errors.New("Invalid username or password")
+		}
+
+	}
+	return false, errors.New("Invalid authorization format")
 }

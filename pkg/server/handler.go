@@ -94,3 +94,20 @@ func Run_HTTP_Server(server_address string, pattern string, registry *Registry.F
 		log.Fatalf("Server failed: %v", err)
 	}
 }
+
+func Run_HTTP_Server_Async(server_address string, pattern string, registry *Registry.Function_Registry) {
+	http.HandleFunc(pattern, func(w http.ResponseWriter, req *http.Request) {
+		go func() {
+			if ok, err := registry.Check_Authentication(req); ok {
+				http_handler(w, req, registry)
+			} else {
+				http.Error(w, err.Error(), http.StatusUnauthorized)
+			}
+		}()
+
+	})
+	log.Printf("Starting server on %s\n", server_address)
+	if err := http.ListenAndServe(server_address, nil); err != nil {
+		log.Fatalf("Server failed: %v", err)
+	}
+}

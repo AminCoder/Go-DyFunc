@@ -17,6 +17,7 @@ type Function_Registry struct {
 	func_map               map[string]reflect.Value
 	middleware_list        []Middleware_Function
 	i_username, i_password string
+	i_supports_async       bool
 	mu                     sync.RWMutex
 }
 
@@ -113,6 +114,9 @@ func (r *Function_Registry) Call(ctx context.Context, name string, args ...inter
 		arg_offset = 1
 	}
 
+	if len(args) == 1 && args[0] == nil && num_in-arg_offset == 0 {
+		args = make([]interface{}, 0)
+	}
 	if len(args) != num_in-arg_offset {
 		return nil, fmt.Errorf("expected %d arguments, got %d", num_in-arg_offset, len(args))
 	}
@@ -121,6 +125,7 @@ func (r *Function_Registry) Call(ctx context.Context, name string, args ...inter
 	if arg_offset == 1 {
 		in[0] = reflect.ValueOf(ctx)
 	}
+
 	for i := 0; i < len(args); i++ {
 		expected_type := fn_type.In(i + arg_offset)
 		converted_arg, err := convert_arg(args[i], expected_type)
@@ -181,4 +186,16 @@ func (r *Function_Registry) Check_Authentication(req *http.Request) (bool, error
 
 	}
 	return false, errors.New("Invalid authorization format")
+}
+
+func (r *Function_Registry) Supports_Async() bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.i_supports_async
+}
+
+func (r *Function_Registry) Set_Supports_Async(value bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.i_supports_async = value
 }
